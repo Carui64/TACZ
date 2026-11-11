@@ -1,0 +1,57 @@
+name: build
+
+on:
+  push:
+    branches: [ "neoforge-26.3" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Build
+        id: build
+        continue-on-error: true
+        run: |
+          chmod +x gradlew
+          ./gradlew build --no-daemon --stacktrace > build.log 2>&1
+
+      - name: Summarize log
+        run: |
+          echo "result: ${{ steps.build.outcome }}" > build-summary.txt
+          echo "commit: ${GITHUB_SHA}" >> build-summary.txt
+          grep -c "error:" build.log >> build-summary.txt || true
+          grep "error:" build.log | sed -E 's/^.*src\/main\/java\///' | head -n 20000 > errors.txt || true
+
+      - name: Upload jar
+        if: steps.build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tacz-jar
+          path: build/libs/*.jar
+
+      - name: Publish logs to build-logs branch
+        run: |
+          mkdir -p /tmp/logs && cp build.log build-summary.txt errors.txt /tmp/logs/
+          git config user.name "build-bot"
+          git config user.email "build-bot@users.noreply.github.com"
+          git checkout --orphan build-logs
+          git rm -rf . > /dev/null 2>&1 || true
+          cp /tmp/logs/* .
+          git add build.log build-summary.txt errors.txt
+          git commit -m "build logs for ${GITHUB_SHA}"
+          git push -f origin build-logs
+
+      - name: Fail if build failed
+        if: steps.build.outcome != 'success'
+        run: exit 1

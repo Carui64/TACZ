@@ -1,17 +1,9 @@
-import java.text.SimpleDateFormat
-import java.util.*
-
-// 设置日期格式，用于填充快照版版本号
-val dateFormat = SimpleDateFormat("MMdd-HHmmss")
-dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-
 plugins {
     alias(libs.plugins.moddev)
 }
 
 val id = project.property("mod_id") as String
 group = project.property("maven_group") as String
-//version = dateFormat.format(Date())
 version = project.property("mod_version") as String
 
 base {
@@ -20,10 +12,6 @@ base {
 
 neoForge {
     version = libs.versions.neoforge.asProvider().get()
-    parchment {
-        mappingsVersion = libs.versions.parchment.get()
-        minecraftVersion = libs.versions.minecraft.asProvider().get()
-    }
     validateAccessTransformers = true
 
     runs {
@@ -35,6 +23,8 @@ neoForge {
                 additionalRuntimeClasspathConfiguration(libs.com.github.figuraMC.luaj.core)
                 additionalRuntimeClasspathConfiguration(libs.com.github.figuraMC.luaj.jse)
                 additionalRuntimeClasspathConfiguration(libs.org.apache.bcel)
+                additionalRuntimeClasspathConfiguration(libs.com.maydaymemory.mae)
+                additionalRuntimeClasspathConfiguration(libs.org.commonmark)
             }
         }
 
@@ -43,20 +33,10 @@ neoForge {
             gameDirectory = file("run/client_a")
         }
 
-        create("client2") {
-            client()
-            gameDirectory = file("run/client_b")
-            programArguments = listOf("--username", "mayday_memory")
-        }
-
         create("server") {
             server()
             gameDirectory = file("run/server")
             jvmArguments.addAll("-Xmx4G", "-Xms4G")
-        }
-
-        create("data") {
-            data()
         }
     }
 
@@ -65,58 +45,14 @@ neoForge {
             sourceSet(sourceSets["main"])
         }
     }
-
-    unitTest {
-        enable()
-        testedMod.set(mods[id])
-    }
 }
 
 repositories {
     mavenLocal()
     mavenCentral()
-    maven("https://maven.ryanhcode.dev/releases") {
-        content {
-            includeGroup("dev.ryanhcode.sable-companion")
-        }
-    }
     maven("https://jitpack.io") {
         content {
-            includeGroup("com.github.rtyley")
             includeGroup("com.github.FiguraMC.luaj")
-            includeGroup("com.github.mcmodderanchor")
-        }
-    }
-    maven("https://maven.shedaniel.me")
-    maven("https://maven.kosmx.dev")
-    maven("https://maven.blamejared.com")
-    exclusiveContent {
-        forRepository {
-            maven {
-                name = "CaffeineMC"
-                url = uri("https://maven.caffeinemc.net/releases")
-            }
-        }
-        filter {
-            includeGroup("net.caffeinemc")
-        }
-    }
-    maven("https://repo.sleeping.town") {
-        content {
-            includeGroup("dev.emi")
-        }
-    }
-    maven {
-        url = uri("https://maven.architectury.dev")
-        content {
-            includeGroup("dev.architectury")
-        }
-    }
-    maven {
-        url = uri("https://maven.latvian.dev/releases")
-        content {
-            includeGroup("dev.latvian.mods")
-            includeGroup("dev.latvian.apps")
         }
     }
     exclusiveContent {
@@ -130,32 +66,14 @@ repositories {
             includeGroup("maven.modrinth")
         }
     }
-    exclusiveContent {
-        forRepository {
-            maven {
-                name = "CurseForge"
-                url = uri("https://cursemaven.com")
-            }
-        }
-        filter {
-            includeGroup("curse.maven")
-        }
-    }
-    flatDir {
-        dir("libs")
-    }
 }
 
 dependencies {
-    implementation("org.commonmark:commonmark:0.21.0")
-    add("additionalRuntimeClasspath", "org.commonmark:commonmark:0.21.0")
+    implementation(libs.org.commonmark)
+    jarJar(libs.org.commonmark)
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")
-    implementation(libs.com.github.mcmodderanchor.simplebedrockmodel)
-    jarJar(libs.com.github.mcmodderanchor.simplebedrockmodel)
-    compileOnly(libs.com.maydaymemory.mae)
-
+    implementation(libs.com.maydaymemory.mae)
+    jarJar(libs.com.maydaymemory.mae)
     implementation(libs.org.apache.commons.math3)
     jarJar(libs.org.apache.commons.math3)
     implementation(libs.com.github.figuraMC.luaj.core)
@@ -165,48 +83,20 @@ dependencies {
     implementation(libs.org.apache.bcel)
     jarJar(libs.org.apache.bcel)
 
-    implementation(libs.me.shedaniel.cloth.config.neoforge)
-    implementation(libs.dev.kosmx.player.animation.lib.forge)
-
-    compileOnly(libs.net.caffeinemc.sodium.neoforge)
-    "additionalRuntimeClasspath"(libs.net.caffeinemc.sodium.neoforge) {
-        isTransitive = false
-    }
-
-    compileOnly(libs.maven.modrinth.iris)
-
-    compileOnly(libs.curse.maven.acceleratedrendering)
-
-    compileOnly(libs.maven.modrinth.carry.on)
-    compileOnly(libs.maven.modrinth.shoulder.surfing.reloaded)
-    compileOnly(libs.mezz.jei.common.api)
-    compileOnly(libs.mezz.jei.neoforge.api)
-    runtimeOnly(libs.mezz.jei.neoforge)
-    compileOnly("dev.emi:emi-neoforge:${libs.versions.emi.get()}:api")
-    compileOnly(libs.emi.neoforge)
-    compileOnly(libs.curse.maven.framework)
-    compileOnly(libs.curse.maven.controllable)
-
-    // sable
-    implementation("curse.maven:sable-1312371:9043865")
-    compileOnly("dev.ryanhcode.sable-companion:sable-companion-common-1.21.1:1.6.0")
-    // Create Aeronautics
-    runtimeOnly("curse.maven:create-328085:7963363") // Create 6.0.10
-    runtimeOnly("curse.maven:create-aeronautics-676721:8763471") // Aeronautics 1.3.2
+    implementation(libs.maven.modrinth.cloth.config)
+    implementation(libs.maven.modrinth.player.animation.lib)
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
     withSourcesJar()
 }
 
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
-    options.release.set(21)
-}
-
-tasks.test {
-    useJUnitPlatform()
+    options.release.set(25)
+    // Tüm hataları tek turda görebilmek için sınırı yükselt
+    options.compilerArgs.addAll(listOf("-Xmaxerrs", "100000", "-Xmaxwarns", "0"))
 }
 
 tasks.processResources {

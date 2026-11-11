@@ -15,10 +15,14 @@ description = '''
 config = "tacz.mixins.json"
 
 [[mixins]]
-config = "tacz.compat.acceleratedrendering.mixins.json"
+config = "simplebedrockmodel.mixins.json"
 
-[[mixins]]
-config = "tacz.compat.iris.mixins.json"
+# SimpleBedrockModel (LGPL-3.0) kaynağı bu projeye dahil edildi; kendi mod girişi gerekli
+[[mods]]
+modId = "simplebedrockmodel"
+version = "2.6.0"
+displayName = "SimpleBedrockModel (bundled)"
+description = '''Bundled library for Bedrock models/animations.'''
 
 [[dependencies."${id}"]]
 modId = "neoforge"
