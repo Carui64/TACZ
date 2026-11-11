@@ -18,14 +18,6 @@ neoForge {
         configureEach {
             systemProperty("forge.logging.console.level", "debug")
 
-            dependencies {
-                additionalRuntimeClasspathConfiguration(libs.org.apache.commons.math3)
-                additionalRuntimeClasspathConfiguration(libs.com.github.figuraMC.luaj.core)
-                additionalRuntimeClasspathConfiguration(libs.com.github.figuraMC.luaj.jse)
-                additionalRuntimeClasspathConfiguration(libs.org.apache.bcel)
-                additionalRuntimeClasspathConfiguration(libs.com.maydaymemory.mae)
-                additionalRuntimeClasspathConfiguration(libs.org.commonmark)
-            }
         }
 
         create("client") {
